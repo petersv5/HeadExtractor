@@ -224,6 +224,8 @@ public class HeadExtractor {
             }
         } catch (IOException e) {
             System.err.println("Unable to fully process " + mcaPath + " due to exception: " + e);
+        } catch (IndexOutOfBoundsException e) {
+            System.err.println("Unable to fully process " + mcaPath + " due to exception: " + e);
         }
     }
 
