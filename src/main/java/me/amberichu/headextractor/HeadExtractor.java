@@ -58,7 +58,7 @@ public class HeadExtractor {
     private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
 
     // Adapted from https://stackoverflow.com/a/475217
-    private static final Pattern BASE64_PATTERN = Pattern.compile("\\\\?[\"']((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))\\\\?[\"']");
+    private static final Pattern BASE64_PATTERN = Pattern.compile("^((?:[A-Za-z0-9+/]{4})*(?:|[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))$");
 
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
@@ -110,26 +110,37 @@ public class HeadExtractor {
     }
 
     private static List<Path> gatherMCA(Path worldPath) throws IOException {
-        Path entitiesPath = worldPath.resolve("entities");
-        Path regionPath = worldPath.resolve("region");
-
+        Path dimensionsPath = worldPath.resolve("dimensions/minecraft");
         List<Path> mcaPaths = new ArrayList<>();
-        if (Files.isDirectory(entitiesPath)) {
-            try (Stream<Path> stream = Files.list(entitiesPath)) {
-                stream.forEach(mcaPaths::add);
-            }
-        }
-        if (Files.isDirectory(regionPath)) {
-            try (Stream<Path> stream = Files.list(regionPath)) {
-                stream.forEach(mcaPaths::add);
-            }
+
+        if (Files.isDirectory(dimensionsPath)) {
+             List<Path> dimPaths = new ArrayList<>();
+             try (Stream<Path> stream = Files.list(dimensionsPath)) {
+                 stream.forEach(dimPaths::add);
+             }
+
+             for (Path dimPath : dimPaths) {
+                 Path entitiesPath = dimPath.resolve("entities");
+                 Path regionPath = dimPath.resolve("region");
+
+                 if (Files.isDirectory(entitiesPath)) {
+                     try (Stream<Path> stream = Files.list(entitiesPath)) {
+                         stream.forEach(mcaPaths::add);
+                     }
+                 }
+                 if (Files.isDirectory(regionPath)) {
+                     try (Stream<Path> stream = Files.list(regionPath)) {
+                         stream.forEach(mcaPaths::add);
+                     }
+                 }
+             }
         }
         mcaPaths.removeIf(path -> !Files.isRegularFile(path) || !path.getFileName().toString().endsWith("mca"));
         return mcaPaths;
     }
 
     private static List<Path> gatherPlayerData(Path worldPath) throws IOException {
-        Path playerDataPath = worldPath.resolve("playerdata");
+        Path playerDataPath = worldPath.resolve("players/data");
         Path levelDataPath = worldPath.resolve("level.dat");
 
         List<Path> dataPaths = new ArrayList<>();
