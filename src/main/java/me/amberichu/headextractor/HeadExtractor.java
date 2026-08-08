@@ -26,9 +26,12 @@ package me.amberichu.headextractor;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.databind.SerializationFeature;
+//import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.steveice10.opennbt.NBTIO;
 import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 import com.github.steveice10.opennbt.tag.builtin.ListTag;
@@ -55,7 +58,9 @@ import java.util.zip.InflaterInputStream;
 
 public class HeadExtractor {
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
+    //private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper()
+        .enable(SerializationFeature.INDENT_OUTPUT);
 
     // Adapted from https://stackoverflow.com/a/475217
     private static final Pattern BASE64_PATTERN = Pattern.compile("^((?:[A-Za-z0-9+/]{4})*(?:|[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))$");
@@ -67,18 +72,43 @@ public class HeadExtractor {
         }
 
         Set<String> heads = extractHeads(Path.of(args[0]));
-        YAML_MAPPER.writeValue(new File("custom-skulls.yml"), new SkinHashesConfig(heads));
+
+        // Linefeeds between the skins
+        DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter();
+        prettyPrinter.indentArraysWith(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE);
+
+        //YAML_MAPPER.writeValue(new File("custom-skulls.yml"), new SkinHashesConfig(heads));
+        JSON_MAPPER.writer(prettyPrinter).writeValue(new File("skulls_from_chunks_players_datapacks.json"), new CustomSkullsFileJson(heads));
     }
 
     static class SkinHashesConfig {
-        @JsonProperty("skin-hashes")
-        @JsonAlias("skin-hashes")
+        @JsonProperty("skin_hash")
         private Set<String> skinHashes = new HashSet<>();
 
         SkinHashesConfig(Set<String> heads) {
             this.skinHashes = heads;
         }
     }
+
+    static class SkinHashesConfigJson {
+        @JsonProperty("skin_hash")
+        private Set<String> skinHashes = new HashSet<>();
+
+        SkinHashesConfigJson(Set<String> heads) {
+            this.skinHashes = heads;
+        }
+    }
+
+    static class CustomSkullsFileJson {
+        @JsonProperty("format_version")
+        private final int format_version = 1;
+        @JsonProperty("skulls")
+        private SkinHashesConfigJson skulls;
+
+        CustomSkullsFileJson(Set<String> heads) {
+            skulls = new SkinHashesConfigJson(heads);
+        }
+     }
 
     private static Set<String> extractHeads(Path worldPath) throws IOException {
         Set<String> heads = ConcurrentHashMap.newKeySet();
