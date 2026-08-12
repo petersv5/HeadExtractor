@@ -16,4 +16,4 @@ The skin hash is then extracted from the Base64 encoded player profile.
 ### Running
 `java -jar HeadExtractor-<VERSION>-all.jar <WORLD DIRECTORY>`
 
-Skin hashes are saved to `custom-skulls.yml`. 
+Skin hashes are saved to `skulls_from_chunks_players_datapacks.json`. 
