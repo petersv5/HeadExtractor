@@ -83,7 +83,8 @@ public class HeadExtractor {
     private static Set<String> extractHeads(Path worldPath) throws IOException {
         Set<String> heads = ConcurrentHashMap.newKeySet();
 
-        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+        //ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
         List<CompletableFuture<?>> tasks = new ArrayList<>();
 
         Consumer<String> headConsumer = head -> {
